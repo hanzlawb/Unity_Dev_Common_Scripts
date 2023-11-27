@@ -99,7 +99,7 @@ public class AdsManager_New : MonoBehaviour
         {
             noInternet = true;
             functionCalled = false;
-            noInternetCanvas.SetActive(true);
+            noInternetCanvas?.SetActive(true);
             //Debug.Log("Not Reachable, Show Pop Up");
         }
         else
@@ -109,7 +109,7 @@ public class AdsManager_New : MonoBehaviour
             {
                 //RequestAds();
                 Debug.Log("Request Again");
-                noInternetCanvas.SetActive(false);
+                noInternetCanvas?.SetActive(false);
                 functionCalled = true;
                 noInternet = false;
             }
@@ -155,13 +155,20 @@ public class AdsManager_New : MonoBehaviour
         // send the request to load the ad.
         Debug.Log("Loading banner ad.");
         simpleBannerView.LoadAd(adRequest);
+        simpleBannerView?.Hide();
+
+        ShowSimpleBannerAd();
     }
+
+    bool simpleBannerShown = false;
     public void ShowSimpleBannerAd()
     {
+        simpleBannerShown= true;
         simpleBannerView?.Show();
     }
     public void HideSimpleBannerAd()
     {
+        simpleBannerShown = false;
         simpleBannerView?.Hide();
     }
     #endregion
@@ -215,12 +222,16 @@ public class AdsManager_New : MonoBehaviour
         Debug.Log("Loading banner ad.");
         bigBannerView.LoadAd(adRequest);
     }
+
+    bool bigBannerShown = false;
     public void ShowBigBannerAd()
     {
+        bigBannerShown = true;
         bigBannerView?.Show();
     }
     public void HideBigBannerAd()
     {
+        bigBannerShown = false;
         bigBannerView?.Hide();
     }
     #endregion
@@ -284,6 +295,7 @@ public class AdsManager_New : MonoBehaviour
         {
             ShownCheck();
             interstitialAd.Show();
+            HideBannerAdsIfOpen();
         }
         else
         {
@@ -297,6 +309,7 @@ public class AdsManager_New : MonoBehaviour
             interstitialAd = null;
             RequestInterstitialAd();
         }
+        
     }
     public void InterstitialAdEvent(InterstitialAd ad)
     {
@@ -334,6 +347,7 @@ public class AdsManager_New : MonoBehaviour
 
             interstitialAd = null;
             RequestInterstitialAd();
+            ShowBannerAdsIfOpen();
         };
         // Raised when the ad failed to open full screen content.
         ad.OnAdFullScreenContentFailed += (AdError error) =>
@@ -347,6 +361,7 @@ public class AdsManager_New : MonoBehaviour
             }
             interstitialAd = null;
             RequestInterstitialAd();
+            ShowBannerAdsIfOpen();
         };
     }
 
@@ -385,7 +400,7 @@ public class AdsManager_New : MonoBehaviour
             RewardedAdEvents(rewardedAd);
         });
     }
-    public void ShowRewardedAd(int re=0)
+    public void ShowRewardedAd(int re = 0)
     {
         if (rewardedAd != null && rewardedAd.CanShowAd())
         {
@@ -397,6 +412,7 @@ public class AdsManager_New : MonoBehaviour
                 rewardedAdEvent.Invoke();
                 //Menu.instance.GetRewards(re);
             });
+            HideBannerAdsIfOpen();
         }
         else
         {
@@ -409,6 +425,7 @@ public class AdsManager_New : MonoBehaviour
             RequestRewardedAd();
             print("Rewarded ad not ready");
         }
+        
     }
     public void RewardedAdEvents(RewardedAd ad)
     {
@@ -446,6 +463,7 @@ public class AdsManager_New : MonoBehaviour
 
             rewardedAd = null;
             RequestRewardedAd();
+            ShowBannerAdsIfOpen();
         };
         // Raised when the ad failed to open full screen content.
         ad.OnAdFullScreenContentFailed += (AdError error) =>
@@ -460,6 +478,7 @@ public class AdsManager_New : MonoBehaviour
 
             rewardedAd = null;
             RequestRewardedAd();
+            ShowBannerAdsIfOpen();
         };
     }
     IEnumerator ReloadRewardedAdCo()
@@ -545,6 +564,7 @@ public class AdsManager_New : MonoBehaviour
             ShownCheck();
             Debug.Log("Showing app open ad.");
             appOpenAd.Show();
+            HideBannerAdsIfOpen();
         }
         else
         {
@@ -574,9 +594,9 @@ public class AdsManager_New : MonoBehaviour
                 StopCoroutine(appOpenRecallCo);
                 appOpenRecallCo = null;
             }
-
             appOpenAd = null;
             RequestAppOpenAd();
+            ShowBannerAdsIfOpen();
         };
         // Raised when the ad failed to open full screen content.
         ad.OnAdFullScreenContentFailed += (AdError error) =>
@@ -586,9 +606,9 @@ public class AdsManager_New : MonoBehaviour
                 StopCoroutine(appOpenRecallCo);
                 appOpenRecallCo = null;
             }
-
             appOpenAd = null;
             RequestAppOpenAd();
+            ShowBannerAdsIfOpen();
         };
     }
     Coroutine appOpenRecallCo;
@@ -642,5 +662,26 @@ public class AdsManager_New : MonoBehaviour
         adAlreadyShown = false;
     }
     #endregion
+    void HideBannerAdsIfOpen()
+    {
+        if (simpleBannerShown)
+        {
+            HideSimpleBannerAd();
+        }
+        if (bigBannerShown)
+        {
+            HideSimpleBannerAd();
+        }
+    }
+    void ShowBannerAdsIfOpen()
+    {
+        if (simpleBannerShown)
+        {
+            ShowSimpleBannerAd();
+        }
+        if (bigBannerShown)
+        {
+            ShowBigBannerAd();
+        }
+    }
 }
-
