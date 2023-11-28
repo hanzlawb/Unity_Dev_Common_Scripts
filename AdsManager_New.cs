@@ -18,7 +18,7 @@ public class AdsManager_New : MonoBehaviour
     public string rewardedId = "ca-app-pub-3940256099942544/5224354917";
     public string appOpenId = "ca-app-pub-3940256099942544/3419835294";
 
-    BannerView simpleBannerView;
+    BannerView simpleBannerView,bigBannerView;
     InterstitialAd interstitialAd;
     RewardedAd rewardedAd;
     AppOpenAd appOpenAd;
@@ -80,10 +80,10 @@ public class AdsManager_New : MonoBehaviour
             RequestAppOpenAd();
 
         if (simpleBannerAdToggler && simpleBannerView == null)
-            CreateBannerView();
+            LoadSimpleBannerAd();
 
         if (bigBannerAdToggler && bigBannerView == null)
-            CreateBigBannerView();
+            LoadBigBannerAd();
 
         if (interstitialAdToggler && interstitialAd == null)
             RequestInterstitialAd();
@@ -114,6 +114,8 @@ public class AdsManager_New : MonoBehaviour
                 noInternet = false;
             }
         }
+
+        //Debug.LogError(simpleBannerShown);
     }
 
     #region SimpleBannerAd
@@ -136,8 +138,6 @@ public class AdsManager_New : MonoBehaviour
         }
         // Create a 320x50 banner at top of the screen
         simpleBannerView = new BannerView(simpleBannerId, AdSize.Banner, AdPosition.Top);
-        //ListenToBannerEvents();
-        LoadSimpleBannerAd();
     }
 
     public void LoadSimpleBannerAd()
@@ -155,28 +155,76 @@ public class AdsManager_New : MonoBehaviour
         // send the request to load the ad.
         Debug.Log("Loading banner ad.");
         simpleBannerView.LoadAd(adRequest);
-        simpleBannerView?.Hide();
-
-        ShowSimpleBannerAd();
+        HideSimpleBannerAd();
     }
 
     bool simpleBannerShown = false;
+
+    [ContextMenu("Show Banner")]
     public void ShowSimpleBannerAd()
     {
         simpleBannerShown= true;
         simpleBannerView?.Show();
     }
+
+    [ContextMenu("Hide Banner")]
     public void HideSimpleBannerAd()
     {
         simpleBannerShown = false;
         simpleBannerView?.Hide();
     }
     #endregion
+    bool resumeSimpleBannerAfterThisAd,resumeBigBannerAfterThisAd;
+    void HideBannerAdsIfOpen()
+    {
+        if (simpleBannerShown)
+        {
+            resumeSimpleBannerAfterThisAd = true;
+            //Debug.LogError("ss");
+        }
+        else
+        {
+            resumeSimpleBannerAfterThisAd = false;
+        }
+
+        if (resumeSimpleBannerAfterThisAd)
+        {
+            HideSimpleBannerAd();
+        }
+
+        ///Big
+        if (bigBannerShown)
+        {
+            resumeBigBannerAfterThisAd = true;
+            //Debug.LogError("ss");
+        }
+        else
+        {
+            resumeBigBannerAfterThisAd = false;
+        }
+
+        if (resumeBigBannerAfterThisAd)
+        {
+            HideBigBannerAd();
+        }
+    }
+    void ShowBannerAdsIfOpen()
+    {
+        if (resumeSimpleBannerAfterThisAd)
+        {
+            //Debug.LogError("After");
+            ShowSimpleBannerAd();
+        }
+
+        if (resumeBigBannerAfterThisAd)
+        {
+            ShowBigBannerAd();
+        }
+    }
 
     #region BigBannerAd
 
-    BannerView bigBannerView;
-    void CreateBigBannerView()
+    void CreateBig_BannerView()
     {
         if (!bigBannerAdToggler)
             return;
@@ -186,13 +234,14 @@ public class AdsManager_New : MonoBehaviour
             return;
         }
 
-        Debug.Log("Creating big banner view");
+        //Debug.LogError("Creating banner view");
         // If we already have a banner, destroy the old one.
         if (bigBannerView != null)
         {
             bigBannerView.Destroy();
             bigBannerView = null;
         }
+        // Create a 320x50 banner at top of the screen
 
         float screenWidth = Screen.width;
         float screenHeight = Screen.height;
@@ -201,9 +250,6 @@ public class AdsManager_New : MonoBehaviour
         int positionY = Mathf.RoundToInt(screenHeight * customBigBannerY);
         bigBannerView = new BannerView(bigBannerId, AdSize.MediumRectangle, positionX, positionY);//valueX, valueY); //y450   x60
 
-        //ListenToBannerEvents();
-        LoadBigBannerAd();
-        bigBannerView?.Hide();
     }
 
     public void LoadBigBannerAd()
@@ -213,22 +259,28 @@ public class AdsManager_New : MonoBehaviour
         // create an instance of a banner view first.
         if (bigBannerView == null)
         {
-            CreateBigBannerView();
+            CreateBig_BannerView();
         }
         // create our request used to load the ad.
         var adRequest = new AdRequest();
         adRequest.Keywords.Add("unity-admob-sample");
         // send the request to load the ad.
-        Debug.Log("Loading banner ad.");
+        Debug.Log("Loading Big banner ad.");
         bigBannerView.LoadAd(adRequest);
+        HideBigBannerAd();
     }
 
     bool bigBannerShown = false;
+
+    [ContextMenu("Show Big Banner")]
     public void ShowBigBannerAd()
     {
+        //Debug.LogError("Show Big");
         bigBannerShown = true;
         bigBannerView?.Show();
     }
+
+    [ContextMenu("Hide Big Banner")]
     public void HideBigBannerAd()
     {
         bigBannerShown = false;
@@ -287,6 +339,8 @@ public class AdsManager_New : MonoBehaviour
             interRecallCo = null;
         }
     }
+
+    [ContextMenu("Show Inter")]
     public void ShowInterstitialAd()
     {
         if (!interstitialAdToggler)
@@ -633,7 +687,7 @@ public class AdsManager_New : MonoBehaviour
     {
         if (wasPaused && !pauseStatus && adAlreadyShown == false)
         {
-            Debug.LogError("AAA");
+            //Debug.LogError("AAA");
             StartCoroutine(ShowAppOpenAdWithDelay());
         }
         wasPaused = pauseStatus;
@@ -662,26 +716,4 @@ public class AdsManager_New : MonoBehaviour
         adAlreadyShown = false;
     }
     #endregion
-    void HideBannerAdsIfOpen()
-    {
-        if (simpleBannerShown)
-        {
-            HideSimpleBannerAd();
-        }
-        if (bigBannerShown)
-        {
-            HideSimpleBannerAd();
-        }
-    }
-    void ShowBannerAdsIfOpen()
-    {
-        if (simpleBannerShown)
-        {
-            ShowSimpleBannerAd();
-        }
-        if (bigBannerShown)
-        {
-            ShowBigBannerAd();
-        }
-    }
 }
