@@ -5,6 +5,10 @@ using GoogleMobileAds.Api;
 using GoogleMobileAds.Common;
 using System;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
+using Firebase;
+using Firebase.Analytics;
+using Firebase.RemoteConfig;
 
 public class AdsManager_New : MonoBehaviour
 {
@@ -12,13 +16,21 @@ public class AdsManager_New : MonoBehaviour
     public bool testMode = false;
     public GameObject noInternetCanvas;
 
-    public string simpleBannerId = "ca-app-pub-3940256099942544/6300978111";
-    public string bigBannerId = "ca-app-pub-3940256099942544/6300978111";
-    public string interId = "ca-app-pub-3940256099942544/1033173712";
-    public string rewardedId = "ca-app-pub-3940256099942544/5224354917";
-    public string appOpenId = "ca-app-pub-3940256099942544/3419835294";
+#if UNITY_ANDROID
+    string simpleBannerId = "ca-app-pub-9585178868261997/1096013729";
+    string bigBannerId = "ca-app-pub-3940256099942544/6300978111";
+    string interId = "ca-app-pub-9585178868261997/9082276967";
+    string rewardedId = "ca-app-pub-9585178868261997/4063004130";
+    string appOpenId = "ca-app-pub-9585178868261997/2516868615";
+#elif UNITY_IOS
 
-    BannerView simpleBannerView,bigBannerView;
+    string simpleBannerId = "ca-app-pub-9585178868261997/1096013729";
+    string bigBannerId = "ca-app-pub-3940256099942544/6300978111";
+    string interId = "ca-app-pub-9585178868261997/9082276967";
+    string rewardedId = "ca-app-pub-9585178868261997/4063004130";
+    string appOpenId = "ca-app-pub-9585178868261997/2516868615";
+#endif
+    BannerView simpleBannerView, bigBannerView;
     InterstitialAd interstitialAd;
     RewardedAd rewardedAd;
     AppOpenAd appOpenAd;
@@ -60,12 +72,29 @@ public class AdsManager_New : MonoBehaviour
     private void Start()
     {
         //8.4.1
+        //Invoke(nameof(InitializeFirebaseAndAds),0.1f);
+    }
+
+    public void InitializeFirebaseAndAds()
+    {
         MobileAds.Initialize(initStatus =>
         {
             print("Ads Initialised !!");
+            Invoke(nameof(InitializeFBAfter), 0.5f);
+            
+        });
+    }
+
+    void InitializeFBAfter()
+    {
+        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWith(task =>
+        {
+            FirebaseManager.instance.remoteConfig = FirebaseRemoteConfig.DefaultInstance;
+            FirebaseAnalytics.SetAnalyticsCollectionEnabled(true);
+            FirebaseManager.instance.remoteConfig.SetDefaultsAsync(FirebaseManager.instance.GetRemoteConfigDefaults());
+
+            FirebaseManager.instance.FetchRemoteConfigValues();
             RequestAds();
-            //if (appOpenAdToggler)
-            //    AppStateEventNotifier.AppStateChanged += OnAppStateChanged;
         });
     }
 
@@ -137,7 +166,7 @@ public class AdsManager_New : MonoBehaviour
             simpleBannerView = null;
         }
         // Create a 320x50 banner at top of the screen
-        simpleBannerView = new BannerView(simpleBannerId, AdSize.Banner, AdPosition.Top);
+        simpleBannerView = new BannerView(simpleBannerId, AdSize.Banner, AdPosition.Bottom);
     }
 
     public void LoadSimpleBannerAd()
@@ -163,7 +192,7 @@ public class AdsManager_New : MonoBehaviour
     [ContextMenu("Show Banner")]
     public void ShowSimpleBannerAd()
     {
-        simpleBannerShown= true;
+        simpleBannerShown = true;
         simpleBannerView?.Show();
     }
 
@@ -174,7 +203,7 @@ public class AdsManager_New : MonoBehaviour
         simpleBannerView?.Hide();
     }
     #endregion
-    bool resumeSimpleBannerAfterThisAd,resumeBigBannerAfterThisAd;
+    bool resumeSimpleBannerAfterThisAd, resumeBigBannerAfterThisAd;
     void HideBannerAdsIfOpen()
     {
         if (simpleBannerShown)
@@ -363,7 +392,7 @@ public class AdsManager_New : MonoBehaviour
             interstitialAd = null;
             RequestInterstitialAd();
         }
-        
+
     }
     public void InterstitialAdEvent(InterstitialAd ad)
     {
@@ -479,7 +508,7 @@ public class AdsManager_New : MonoBehaviour
             RequestRewardedAd();
             print("Rewarded ad not ready");
         }
-        
+
     }
     public void RewardedAdEvents(RewardedAd ad)
     {
@@ -601,7 +630,7 @@ public class AdsManager_New : MonoBehaviour
             // Register to ad events to extend functionality.
             RegisterAppOpenEventHandlers(ad);
 
-            if (appOpenFirst == true)
+            if (appOpenFirst == true && FirebaseManager.instance.IsAppOpenStartEnabled())
             {
                 appOpenFirst = false;
                 ShowAppOpenAd();
@@ -613,7 +642,7 @@ public class AdsManager_New : MonoBehaviour
         if (!appOpenAdToggler)
             return;
 
-        if (appOpenAd != null && appOpenAd.CanShowAd())
+        if (appOpenAd != null && appOpenAd.CanShowAd() && FirebaseManager.instance.IsAppOpenResumeEnabled())
         {
             ShownCheck();
             Debug.Log("Showing app open ad.");
@@ -636,6 +665,10 @@ public class AdsManager_New : MonoBehaviour
         // Raised when the ad closed full screen content.
         ad.OnAdFullScreenContentClosed += () =>
         {
+            if(SceneManager.GetActiveScene().buildIndex == 0)
+            {
+                SceneManager.LoadScene(1);
+            }
             //Uncomment this as per_ need.
             //if (Menu.instance != null)
             //{
@@ -685,7 +718,7 @@ public class AdsManager_New : MonoBehaviour
     bool adAlreadyShown;
     private void OnApplicationPause(bool pauseStatus)
     {
-        if (wasPaused && !pauseStatus && adAlreadyShown == false)
+        if (wasPaused && !pauseStatus && adAlreadyShown == false && FirebaseManager.instance.IsAppOpenResumeEnabled())
         {
             //Debug.LogError("AAA");
             StartCoroutine(ShowAppOpenAdWithDelay());
