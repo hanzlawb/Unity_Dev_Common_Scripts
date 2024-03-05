@@ -79,7 +79,7 @@ public class AdsManager_New : MonoBehaviour
         Screen.sleepTimeout = 10000;
         //8.4.1
         //Invoke(nameof(InitializeFirebaseAndAds),0.1f);
-        RequestInterstitialAd();
+        //RequestInterstitialAd();
     }
 
     public void InitializeFirebaseAndAds()
