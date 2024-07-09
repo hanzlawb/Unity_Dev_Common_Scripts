@@ -86,7 +86,7 @@ public class GoogleMobileAdsConsentController : MonoBehaviour
         MobileAdsEventExecutor.ExecuteInUpdate(() =>
         {
             //Debug.Log("Mobile Ads Initialized From Consent");
-            AdsManager_New.Instance.InitializeFirebaseAndAds();
+            //AdsManager_New.Instance.InitializeFirebaseAndAds();
 
 
         });
