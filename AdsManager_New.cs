@@ -13,7 +13,7 @@ using UnityEngine.SceneManagement;
 public class AdsManager_New : MonoBehaviour
 {
     public static AdsManager_New Instance;
-    public bool testMode = false;
+    //public bool testMode = false;
     public GameObject noInternetCanvas, interLoadingPanel,appOpenBg;
 
 #if UNITY_ANDROID
@@ -63,15 +63,15 @@ public class AdsManager_New : MonoBehaviour
             Destroy(gameObject);
         }
 
-        if (testMode)
-        {
-            simpleBannerId = "ca-app-pub-3940256099942544/6300978111";
-            bigBannerId = "ca-app-pub-3940256099942544/6300978111";
-            interId = "ca-app-pub-3940256099942544/1033173712";
-            rewardedId = "ca-app-pub-3940256099942544/5224354917";
-            appOpenId = "ca-app-pub-3940256099942544/3419835294";
-            rewardedInterstitialId = "ca-app-pub-3940256099942544/5354046379";
-        }
+        //if (testMode)
+        //{
+        //    simpleBannerId = "ca-app-pub-3940256099942544/6300978111";
+        //    bigBannerId = "ca-app-pub-3940256099942544/6300978111";
+        //    interId = "ca-app-pub-3940256099942544/1033173712";
+        //    rewardedId = "ca-app-pub-3940256099942544/5224354917";
+        //    appOpenId = "ca-app-pub-3940256099942544/3419835294";
+        //    rewardedInterstitialId = "ca-app-pub-3940256099942544/5354046379";
+        //}
     }
 
     private void Start()
@@ -80,6 +80,7 @@ public class AdsManager_New : MonoBehaviour
         //8.4.1
         //Invoke(nameof(InitializeFirebaseAndAds),0.1f);
         //RequestInterstitialAd();
+        StartCoroutine(RequestAfterTime());
     }
 
     public void InitializeFirebaseAndAds()
@@ -105,8 +106,19 @@ public class AdsManager_New : MonoBehaviour
         //});
     }
 
+    IEnumerator RequestAfterTime()
+    {
+        yield return new WaitForSecondsRealtime(5f);
+        RequestAds();
+    }
     void RequestAds()
     {
+        if (rewardedAdToggler && rewardedAd == null)
+            RequestRewardedAd();
+
+        if (rewardedInterstitialAdToggler && rewardedInterstitialAd == null)
+            RequestRewardedInterstitialAd();
+
         if (PlayerPrefs.GetInt("RemoveAds") == 1)
         {
             return;
@@ -124,11 +136,6 @@ public class AdsManager_New : MonoBehaviour
         if (interstitialAdToggler && interstitialAd == null)
             RequestInterstitialAd();
 
-        if (rewardedAdToggler && rewardedAd == null)
-            RequestRewardedAd();
-
-        if (rewardedInterstitialAdToggler && rewardedInterstitialAd == null)
-            RequestRewardedInterstitialAd();
     }
 
     bool noInternet, functionCalled;
